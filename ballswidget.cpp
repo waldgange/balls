@@ -8,9 +8,15 @@ namespace Balls {
 
 BallsWidget::BallsWidget(QWidget *parent) : QWidget(parent) {
     balls.emplace_back(70, 10, 30, rect().width() / 2, rect().height() / 2);
-    balls.emplace_back(70, 10, 140, rect().width() / 2, rect().height() / 2);
-    balls.emplace_back(70, 10, 210, rect().width() / 2, rect().height() / 2);
-    balls.emplace_back(70, 10, 320, rect().width() / 2, rect().height() / 2);
+    balls.emplace_back(70, 10, 140, rect().width() / 2 + 100, rect().height() / 2);
+//    balls.emplace_back(70, 10, 210, rect().width() / 2, rect().height() / 2);
+//    balls.emplace_back(70, 10, 320, rect().width() / 2, rect().height() / 2);
+
+    for (std::uint16_t i = 0; i < balls.size(); ++i) {
+        for (std::uint16_t j = i + 1; i < balls.size(); ++i) {
+            ball_pairs.emplace_back(i, j);
+        }
+    }
 
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &BallsWidget::render_later);
@@ -34,12 +40,17 @@ void BallsWidget::process_scene() {
 
     QPainter painter(&pm);
     painter.fillRect(rect(), Qt::white);
+
     for (auto& b : balls) {
         b.process(rect());
         painter.setPen(Qt::black);
         painter.setBrush(Qt::red);
         painter.drawEllipse(b.x - b.r, b.y - b.r, b.r * 2, b.r * 2);
     }
+    for (auto& b : ball_pairs) {
+        balls[b.first].process_collision(balls[b.second]);
+    }
+
     painter.end();
     frames.emplace(std::move(pm));
 }
