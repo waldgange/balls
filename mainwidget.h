@@ -10,7 +10,7 @@ class MainWidget : public QWidget
 {
     Q_OBJECT
 
-    QWidget* balls_wgt;
+    BallsWidget* balls_wgt;
 public:
     MainWidget(QWidget *parent = nullptr);
     ~MainWidget();

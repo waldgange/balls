@@ -1,6 +1,7 @@
 #include "mainwidget.h"
 #include <QLayout>
 #include <QPushButton>
+#include <QObject>
 
 namespace Balls {
 
@@ -22,6 +23,9 @@ MainWidget::MainWidget(QWidget *parent)
     btn_lo->addWidget(clear_btn);
     btn_lo->addStretch();
     main_lo->addLayout(btn_lo);
+
+    connect(add_btn, &QPushButton::clicked, balls_wgt, &BallsWidget::add_ball);
+    connect(clear_btn, &QPushButton::clicked, balls_wgt, &BallsWidget::remove_balls);
 }
 
 MainWidget::~MainWidget()

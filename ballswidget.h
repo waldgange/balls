@@ -2,51 +2,57 @@
 #define BALLSWIDGET_H
 
 #include <QWidget>
+#include <QLoggingCategory>
 #include <QPaintEvent>
+#include <QVector2D>
 #include <vector>
 #include <utility>
 #include <queue>
 #include <mutex>
 #include <cmath>
-#include <QLoggingCategory>
 
 namespace Balls {
 
 struct Ball {
-    uint16_t x = 0;
-    uint16_t y = 0;
-    int16_t dx = 0;
-    int16_t dy = 0;
-    uint8_t speed = 0;
-    const uint8_t r = 0;
-    const uint8_t mass = 0;
+    QVector2D v;
+    float mass = 0;
+    float r = 0;
+    float x = 0;
+    float y = 0;
 
-    Ball (uint8_t _r, uint8_t _speed, uint16_t _direction, uint16_t _x = 0, uint16_t _y = 0)
-        : x(_x)
-        , y(_y)
-        , speed(_speed)
+    Ball () {}
+    Ball (float _r, float _speed, float _direction, float _x = 0, float _y = 0)
+        : v(cos(3.14159 * _direction / 180) * _speed,
+            sin(3.14159 * _direction / 180) * _speed)
+        , mass(3.14159 * _r * _r)
         , r(_r)
-        , mass(3.14 * r * r / 100) {
-        dx = speed * cos(_direction * 3.14159 / 180);
-        dy = speed * sin(_direction * 3.14159 / 180);
-    }
+        , x(_x)
+        , y(_y) { }
 
     void process(const QRect& border) {
-        x += dx;
-        y += dy;
+        x += v.x();
+        y += v.y();
         if (x > border.width() - r) {
-            x -= x + r - border.width();
-            dx = -dx;
+            x = border.width() - r;
+            if (v.x() > 0) {
+                v.setX(-v.x());
+            }
         } else if (x < r) {
-            x += r - x;
-            dx = -dx;
+            x = r;
+            if (v.x() < 0) {
+                v.setX(-v.x());
+            }
         }
         if (y < r) {
-            y += r - y;
-            dy = -dy;
+            y = r;
+            if (v.y() < 0) {
+                v.setY(-v.y());
+            }
         } else if (y > border.height() - r) {
-            y -= y + r - border.height();
-            dy = -dy;
+            y = border.height() - r;
+            if (v.y() > 0) {
+                v.setY(-v.y());
+            }
         }
     }
 
@@ -54,25 +60,37 @@ struct Ball {
         if (this == &other) {
             return;
         }
-        int16_t xx = x - other.x;
-        int16_t yy = y - other.y;
-        int16_t next_xx = xx + dx - other.dx;
-        int16_t next_yy = yy + dy - other.dy;
-        uint16_t path = xx * xx + yy * yy;  // xx + yy / (2 * xx)
-        uint16_t next_path = next_xx * next_xx + next_yy * next_yy;
-        if (path == 0 || next_path > path || path > (r + other.r) * (r + other.r)) {
+        QVector2D parallel(x - other.x, y - other.y);
+        if (parallel.length() == 0
+            || (pow(x + v.x() - other.x - other.v.x(), 2) + pow(y + v.y() - other.y - other.v.y(), 2)) > parallel.lengthSquared()
+            || parallel.length() > r + other.r) {
             return;
         }
-        path = sqrt(path);
-        double nx = -xx / path;
-        double ny = -yy / path;
+        parallel.normalize();
+        float cos_alpha = QVector2D::dotProduct(v, parallel) / v.length();
+        float sin_alpha = sqrt(1 - cos_alpha * cos_alpha);
+        QVector2D vp = parallel * v.length() * cos_alpha;
+        QVector2D vn = parallel * v.length() * sin_alpha;
 
-        double p = 2 * (dx * nx + dy * ny - other.dx * nx - other.dy * ny) /
-                (mass + other.mass);
-        dx = dx - p * mass * nx;
-        dy = dy - p * mass * ny;
-        other.dx = other.dx + p * other.mass * nx;
-        other.dy = other.dy + p * other.mass * ny;
+        float other_cos_alpha = QVector2D::dotProduct(other.v, parallel) / other.v.length();
+        float other_sin_alpha = sqrt(1 - other_cos_alpha * other_cos_alpha);
+        QVector2D other_vp = parallel * other.v.length() * other_cos_alpha;
+        QVector2D other_vn = parallel * other.v.length() * other_sin_alpha;
+
+        QVector2D new_vp = (other_vp * 2 * other.mass + vp * (mass - other.mass)) / (mass + other.mass);
+        QVector2D new_other_vp = (vp * 2 * mass + other_vp * (other.mass - mass)) / (mass + other.mass);
+
+        v = vn + new_vp;
+        other.v = other_vn + new_other_vp;
+
+        if (std::isnan(v.x()) || std::isnan(v.y())) {
+            v.setX(1);
+            v.setY(1);
+        }
+        if (std::isnan(other.v.x()) || std::isnan(other.v.y())) {
+            other.v.setX(1);
+            other.v.setY(1);
+        }
     }
 };
 
@@ -83,20 +101,27 @@ public:
     explicit BallsWidget(QWidget *parent = nullptr);
 
 protected:
-    void paintEvent(QPaintEvent *event) override;
+    void paintEvent(QPaintEvent *) override;
+    void showEvent(QShowEvent *) override;
 
 private:
-    void render_now(const QRect& rect);
+    void render_now();
+    void clear_scene();
 
     using BallsPair = std::pair<std::uint16_t, std::uint16_t>;
 
-    std::vector<Ball> balls;
-    std::vector<BallsPair> ball_pairs;
-    std::queue<QPixmap> frames;
+    std::mutex balls_mutex;
+     std::vector<Ball> balls;
+     std::vector<BallsPair> ball_pairs;
     std::mutex frames_mutex;
+     std::queue<QPixmap> frames;
+
 public slots:
     void render_later();
     void process_scene();
+
+    void add_ball();
+    void remove_balls();
 
 signals:
 
