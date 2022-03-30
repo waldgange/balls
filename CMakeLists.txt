@@ -19,6 +19,8 @@ add_executable(balls
     mainwidget.h
     ballswidget.cpp
     ballswidget.h
+    ball.cpp
+    ball.h
 )
 
 target_link_libraries(balls PRIVATE Qt5::Widgets)
