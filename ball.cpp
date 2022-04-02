@@ -2,6 +2,7 @@
 
 namespace Balls {
 
+uint64_t Ball::no_collision_record = 0;
 
 Ball::Ball(float _r, float _speed, float _direction, float _x, float _y)
     : v(cos(3.14159 * _direction / 180) * _speed,
@@ -11,26 +12,35 @@ Ball::Ball(float _r, float _speed, float _direction, float _x, float _y)
     , x(_x)
     , y(_y) { }
 
-void Ball::process(const QRect &border) {
-    x += v.x();
-    y += v.y();
-    if (x > border.width() - r) {
+void Ball::process(const float dt, const QRect &border) {
+    x += v.x() * dt;
+    y += v.y() * dt;
+
+    process_border(border);
+
+    if (++no_collision_cycles > no_collision_record) {
+        no_collision_record = no_collision_cycles;
+    }
+}
+
+void Ball::process_border(const QRect &border) {
+    if (x + r > border.width()) {
         x = border.width() - r;
         if (v.x() > 0) {
             v.setX(-v.x());
         }
-    } else if (x < r) {
+    } else if (x - r < 0) {
         x = r;
         if (v.x() < 0) {
             v.setX(-v.x());
         }
     }
-    if (y < r) {
+    if (y - r < 0) {
         y = r;
         if (v.y() < 0) {
             v.setY(-v.y());
         }
-    } else if (y > border.height() - r) {
+    } else if (y + r > border.height()) {
         y = border.height() - r;
         if (v.y() > 0) {
             v.setY(-v.y());
@@ -38,41 +48,61 @@ void Ball::process(const QRect &border) {
     }
 }
 
-void Ball::process_collision(Balls::Ball &other) {
-    if (this == &other) {
-        return;
-    }
+bool Ball::collides(const Ball &other) {
+    return QVector2D(x - other.x, y - other.y).length() < r + other.r;
+}
+
+void Ball::process_collision(Balls::Ball &other, float dt, const QRect& border) {
     QVector2D parallel(x - other.x, y - other.y);
-    if (parallel.length() == 0
-            || (pow(x + v.x() - other.x - other.v.x(), 2) + pow(y + v.y() - other.y - other.v.y(), 2)) > parallel.lengthSquared()
-            || parallel.length() > r + other.r) {
+    float path = parallel.length();
+
+    if (path < 5.0f || std::isnan(path) || std::isnan(parallel.x()) || std::isnan(parallel.y())) {
+        process(dt, border);
         return;
     }
+
     parallel.normalize();
-    float cos_alpha = QVector2D::dotProduct(v, parallel) / v.length();
-    float sin_alpha = sqrt(1 - cos_alpha * cos_alpha);
-    QVector2D vp = parallel * v.length() * cos_alpha;
-    QVector2D vn = parallel * v.length() * sin_alpha;
+    QVector2D normal(-parallel.y(), parallel.x());
 
-    float other_cos_alpha = QVector2D::dotProduct(other.v, parallel) / other.v.length();
-    float other_sin_alpha = sqrt(1 - other_cos_alpha * other_cos_alpha);
-    QVector2D other_vp = parallel * other.v.length() * other_cos_alpha;
-    QVector2D other_vn = parallel * other.v.length() * other_sin_alpha;
+    auto fix_velocity = [] (QVector2D& vec) {
+        if (std::isnan(vec.x()) || std::isnan(vec.y())) {
+            vec.setX(0.0f);
+            vec.setY(0.0f);
+        } else if (vec.length() > MAX_BALL_SPEED) {
+            vec.normalize();
+            vec *= MAX_BALL_SPEED;
+        }
+    };
 
-    QVector2D new_vp = (other_vp * 2 * other.mass + vp * (mass - other.mass)) / (mass + other.mass);
-    QVector2D new_other_vp = (vp * 2 * mass + other_vp * (other.mass - mass)) / (mass + other.mass);
+    QVector2D vp, vn;
+    if (v.length() != 0) {
+        float cos_alpha = QVector2D::dotProduct(v, parallel) / v.length();
+        float sin_alpha = QVector2D::dotProduct(v, normal) / v.length();
+        vp = parallel * v.length() * cos_alpha;
+        vn = normal * v.length() * sin_alpha;
+    }
+    QVector2D other_vp, other_vn;
+    if (other.v.length() != 0) {
+        float other_cos_alpha = QVector2D::dotProduct(other.v, parallel) / other.v.length();
+        float other_sin_alpha = QVector2D::dotProduct(other.v, normal) / other.v.length();
+        other_vp = parallel * other.v.length() * other_cos_alpha;
+        other_vn = normal * other.v.length() * other_sin_alpha;
+    }
+
+    QVector2D new_vp = (2.0f * other_vp * other.mass + vp * (mass - other.mass)) / (mass + other.mass);
+    QVector2D new_other_vp = (2.0f * vp * mass + other_vp * (other.mass - mass)) / (mass + other.mass);
 
     v = vn + new_vp;
     other.v = other_vn + new_other_vp;
+    fix_velocity(v);
+    fix_velocity(other.v);
 
-    if (std::isnan(v.x()) || std::isnan(v.y())) {
-        v.setX(1);
-        v.setY(1);
-    }
-    if (std::isnan(other.v.x()) || std::isnan(other.v.y())) {
-        other.v.setX(1);
-        other.v.setY(1);
-    }
+    return;
+}
+
+void print_vector(const QVector2D &vec, const std::string &name) {
+    qDebug() << name.c_str() << ":\t" << vec << "\t=\t" << vec.length()
+             << "\t" << (int)(atanf(vec.y() / vec.x()) * 180 / 3.14) << " degree";
 }
 
 
