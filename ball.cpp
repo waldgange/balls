@@ -2,7 +2,6 @@
 
 namespace Balls {
 
-uint64_t Ball::no_collision_record = 0;
 
 Ball::Ball(float _r, float _speed, float _direction, float _x, float _y)
     : v(cos(3.14159 * _direction / 180) * _speed,
@@ -17,10 +16,6 @@ void Ball::process(const float dt, const QRect &border) {
     y += v.y() * dt;
 
     process_border(border);
-
-    if (++no_collision_cycles > no_collision_record) {
-        no_collision_record = no_collision_cycles;
-    }
 }
 
 void Ball::process_border(const QRect &border) {
@@ -96,6 +91,9 @@ void Ball::process_collision(Balls::Ball &other, float dt, const QRect& border) 
     other.v = other_vn + new_other_vp;
     fix_velocity(v);
     fix_velocity(other.v);
+
+    no_collision_cycles = 0;
+    other.no_collision_cycles = 0;
 
     return;
 }

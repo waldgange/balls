@@ -10,7 +10,9 @@
 namespace Balls {
 
 const uint16_t MAX_FRAMES_QUEUE = 10;
-const uint16_t MAX_BALL_SPEED = 500;
+const uint16_t MAX_BALL_SPEED = 10;
+const uint16_t MAX_BALL_RADIUS = 30;
+const uint16_t MIN_BALL_RADIUS = 5;
 // If speed won't be limited, we'll need to always increase process frequency.
 // Otherwise we can miss some collisions.
 
@@ -27,7 +29,7 @@ struct Ball {
     float y = 0.0f;
     float inner_dt = 0.0f;
 
-    Ball (float _r, float _speed, float _direction, float _x = 0, float _y = 0);
+    Ball (float _r, float _speed, float _direction, float _x, float _y);
 
     void process(const float dt, const QRect& border);
     void process_border(const QRect& border);

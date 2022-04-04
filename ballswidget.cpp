@@ -9,9 +9,7 @@
 namespace Balls {
 
 BallsWidget::BallsWidget(QWidget *parent)
-    : QWidget(parent)
-    , processed(true) {
-
+    : QWidget(parent) {
     QTimer *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &BallsWidget::render_later);
     timer->start(1000/30);
@@ -38,20 +36,72 @@ void BallsWidget::process_scene(const float dt) {
     for (auto& b : balls) {
         b.process(dt, r);
     }
+
+    UniqueBallPairs ball_pairs = get_potential_collisions();
+    UniqueBallPairs new_colliding_pairs;
+
     for (auto& b : ball_pairs) {
         Ball& b1 = balls[b.first];
         Ball& b2 = balls[b.second];
-        BallsPair bp = std::make_pair<int, int>(b.first, b.second);
+        BallPair bp = std::make_pair<int, int>(b.first, b.second);
         auto it = colliding_pairs.find(bp);
         bool collided = it != colliding_pairs.end();
         bool colliding = b1.collides(b2);
-        if (colliding && !collided) {
-            b1.process_collision(b2, dt, r);
-            colliding_pairs.emplace(std::move(bp));
-        } else if (!colliding && collided) {
-            colliding_pairs.erase(it);
+        if (colliding) {
+            if (!collided) {
+                b1.process_collision(b2, dt, r);
+            }
+            new_colliding_pairs.emplace(std::move(bp));
         }
     }
+    std::swap(colliding_pairs, new_colliding_pairs);
+}
+
+UniqueBallPairs BallsWidget::get_potential_collisions() {
+    // "Sweep and Prune" algorythm
+    // Breaking O(n^2) complexity of checking all the pairs
+    std::multimap<float, int> balls_x, balls_y;
+    for(int i = 0; i < balls.size(); ++i) {
+        balls_x.emplace(balls[i].x - balls[i].r, i);
+        balls_y.emplace(balls[i].y - balls[i].r, i);
+    }
+
+    auto filter_pairs = [&] (std::multimap<float, int>& balls_on_axle) -> UniqueBallPairs {
+        UniqueBallPairs r;
+
+        auto l_it = balls_on_axle.begin();
+        auto r_it = l_it;
+        while (l_it != balls_on_axle.end()) {
+            if (l_it == r_it) {
+                ++r_it;
+                continue;
+            }
+            if (r_it == balls_on_axle.end() || l_it->first + balls[l_it->second].r * 2 < r_it->first) {
+                ++l_it;
+                r_it = l_it;
+                continue;
+            }
+            if (l_it->second < r_it->second) {
+                r.emplace(l_it->second, r_it->second);
+            } else {
+                r.emplace(r_it->second, l_it->second);
+            }
+            ++r_it;
+        }
+
+        return r;
+    };
+
+    UniqueBallPairs result;
+    const UniqueBallPairs bx = filter_pairs(balls_x);
+    const UniqueBallPairs by = filter_pairs(balls_y);
+    for (const auto& b : bx) {
+        if (by.find(b) != by.end()) {
+            result.emplace(b);
+        }
+    }
+
+    return result;
 }
 
 void BallsWidget::make_frame() {
@@ -71,14 +121,9 @@ void BallsWidget::make_frame() {
         if (balls.empty()) {
             return;
         }
-        float max_speed = 1.0f;
-        for (const auto& b : balls) {
-            max_speed = std::max(max_speed, abs(b.v.length()));
+        for (int i = 0; i < MAX_BALL_SPEED; ++i) {
+            process_scene(1.0f / MAX_BALL_SPEED);
         }
-        for (int i = 0; i < int(max_speed); ++i) {
-            process_scene(1.0f / max_speed);
-        }
-        processed = true;
         for (auto& b : balls) {
             painter.setPen(Qt::black);
             painter.setBrush(Qt::red);
@@ -127,28 +172,19 @@ void BallsWidget::add_ball() {
         angle = angle % 360;
     }
 
-    Ball b(5 + rv % 26,
-           5 + (rv >> 1) % 21,
+    Ball b(MIN_BALL_RADIUS + rv % (MAX_BALL_RADIUS - MIN_BALL_RADIUS + 1),
+           5 + (rv >> 1) % (MAX_BALL_SPEED - 5),
            angle,
            rect().width() / 2,
            rect().height() / 2);
 
     std::lock_guard<std::mutex> guard(balls_mutex);
-    if (!processed) {
-        return;
-    }
-    processed = false;
 
     balls.emplace_back(std::move(b));
-
-    for (int i = 0; i < balls.size() - 1; ++i) {
-        ball_pairs.emplace_back(i, balls.size() - 1);
-    }
 }
 
 void BallsWidget::remove_balls() {
     std::lock_guard<std::mutex> g1(balls_mutex);
-    ball_pairs.clear();
     balls.clear();
     clear_scene();
 }

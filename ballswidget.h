@@ -15,13 +15,14 @@
 
 namespace Balls {
 
-using BallsPair = std::pair<uint16_t, uint16_t>;
-
+using BallPair = std::pair<uint16_t, uint16_t>;
 struct BallsPairHash {
-    size_t operator()(BallsPair p) const noexcept {
+    size_t operator()(BallPair p) const noexcept {
         return size_t(p.first) << 16 | p.second;
     }
 };
+using UniqueBallPairs = std::unordered_set<BallPair, BallsPairHash>;
+
 
 class BallsWidget : public QWidget
 {
@@ -35,16 +36,16 @@ protected:
 
 private:
     void process_scene(const float dt = 1.0f / MAX_BALL_SPEED);
+    UniqueBallPairs get_potential_collisions();
+
     void clear_scene();
     void render_now();
 
     std::mutex balls_mutex;
      std::vector<Ball> balls;
-     std::vector<BallsPair> ball_pairs;
-     std::unordered_set<BallsPair, BallsPairHash> colliding_pairs;
+     UniqueBallPairs colliding_pairs;
     std::mutex frames_mutex;
      std::queue<QPixmap> frames;
-     bool processed;
 
 public slots:
     void render_later();
