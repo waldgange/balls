@@ -1,7 +1,7 @@
 #ifndef BALLSWIDGET_H
 #define BALLSWIDGET_H
 
-#include "scene/scene-manager.h"
+#include "scene-manager.h"
 
 #include <QWidget>
 #include <QPaintEvent>

@@ -1,7 +1,7 @@
 #ifndef SCENEMANAGER_H
 #define SCENEMANAGER_H
 
-#include "../ball/ball.h"
+#include "ball.h"
 #include <unordered_set>
 #include <vector>
 
