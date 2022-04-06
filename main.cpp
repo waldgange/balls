@@ -1,6 +1,7 @@
 #include "mainwidget.h"
 
 #include <QApplication>
+#include <QLoggingCategory>
 
 int main(int argc, char *argv[])
 {
