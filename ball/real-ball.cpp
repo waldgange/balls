@@ -6,9 +6,10 @@
 namespace Balls {
 
 
-RealBall::RealBall(float x, float y) : Ball()
-  , _x(x)
-  , _y(y) {
+RealBall::RealBall(uint64_t id, float x, float y)
+    : _id(id)
+    , _x(x)
+    , _y(y) {
     std::srand(std::time(nullptr));
     uint32_t rv = std::rand();
     static uint16_t angle = 10;
@@ -17,7 +18,7 @@ RealBall::RealBall(float x, float y) : Ball()
         angle = angle % 360;
     }
     _r = MIN_BALL_RADIUS + rv % (MAX_BALL_RADIUS - MIN_BALL_RADIUS + 1);
-    mass = 3.14159 * _r * _r;
+    _mass = 3.14159 * _r * _r;
     float speed = 5 + (rv >> 1) % (MAX_BALL_SPEED - 5);
     v.setX(cos(3.14159 * angle / 180) * speed);
     v.setY(sin(3.14159 * angle / 180) * speed);
@@ -58,7 +59,12 @@ void RealBall::process_border(const uint16_t width,
     }
 }
 
-bool RealBall::collides(const std::shared_ptr<Ball>& other) const {
+bool RealBall::collides(const std::shared_ptr<Ball>& o) const {
+    RealBall* other = dynamic_cast<RealBall*>(o.get());
+    if (!other) {
+        throw std::runtime_error("Invvalid argument type");
+    }
+    std::scoped_lock(m, other->m);
     return QVector2D(_x - other->x(), _y - other->y()).length() < _r + other->r();
 }
 
@@ -103,8 +109,8 @@ void RealBall::process_collision(const std::shared_ptr<Ball>& o) {
         other_vn = normal * other->v.length() * other_sin_alpha;
     }
 
-    QVector2D new_vp = (2.0f * other_vp * other->mass + vp * (mass - other->mass)) / (mass + other->mass);
-    QVector2D new_other_vp = (2.0f * vp * mass + other_vp * (other->mass - mass)) / (mass + other->mass);
+    QVector2D new_vp = (2.0f * other_vp * other->_mass + vp * (_mass - other->_mass)) / (_mass + other->_mass);
+    QVector2D new_other_vp = (2.0f * vp * _mass + other_vp * (other->_mass - _mass)) / (_mass + other->_mass);
 
     v = vn + new_vp;
     other->v = other_vn + new_other_vp;
@@ -112,6 +118,10 @@ void RealBall::process_collision(const std::shared_ptr<Ball>& o) {
     fix_velocity(other->v);
 
     return;
+}
+
+uint32_t RealBall::id() const {
+    return _id;
 }
 
 float RealBall::x() const {
@@ -125,6 +135,5 @@ float RealBall::y() const {
 float RealBall::r() const {
     return _r;
 }
-
 
 }
