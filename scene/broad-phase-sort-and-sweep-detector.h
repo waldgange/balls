@@ -9,7 +9,7 @@ namespace Balls {
 class SortAndSweepDetector : public BroadPhaseManager
 {
 protected:
-    UniqueBallPtrPairs get_potential_collisions(const Frame& bf) const override;
+    UniqueBallPairs get_potential_collisions(const Frame& bf) const override;
 };
 
 

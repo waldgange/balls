@@ -3,7 +3,6 @@
 #include <QPainter>
 #include <QTimer>
 #include <QTime>
-#include <ctime>
 
 
 namespace Balls {
@@ -11,7 +10,9 @@ namespace Balls {
 BallsWidget::BallsWidget(QWidget *parent)
     : QWidget(parent)
     , shutdown(true) {
-    sm = make_scene_manager(BroadPhaseType::SORT_AND_SWEEP, NarrowPhaseType::PARALLEL);
+    sm = make_scene_manager(PrePhaseType::PARALLEL,
+                            BroadPhaseType::SORT_AND_SWEEP,
+                            NarrowPhaseType::SEQUENT);
     assert(sm);
     sm->start();
 

@@ -19,21 +19,24 @@ public:
     ~NarrowPhaseParallelProcessor();
 
     void start() override;
-    virtual void process_potential_collisions(UniqueBallPtrPairs potential_collisions) override;
+    virtual void process_potential_collisions(UniqueBallPairs potential_collisions) override;
 
 protected:
     std::mutex colliding_mutex;
-     UniqueBallPtrPairs colliding_pairs;
-     UniqueBallPtrPairs new_colliding_pairs;
+     UniqueBallPairs colliding_pairs;
+     UniqueBallPairs new_colliding_pairs;
 
     std::condition_variable tasks_cv;
     std::mutex tasks_mutex;
      std::vector<std::thread> ball_workers;
-     std::queue<BallPtrPair> tasks;
+     UniqueBallPairs tasks;
+     UniqueBallPairs::iterator task_it;
      bool shutdown = false;
+    std::condition_variable tasks_counter_cv;
+    std::mutex tasks_counter_mutex;
      uint32_t tasks_left;
 
-    void process_task(const BallPtrPair& bp);
+    void process_task(const BallPair& bp);
     void work();
     void stop();
 };

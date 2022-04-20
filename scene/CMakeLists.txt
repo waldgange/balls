@@ -3,6 +3,8 @@ find_package(Qt5 COMPONENTS Core REQUIRED)
 add_library(scene SHARED
     scene-manager.cpp
     real-scene-manager.cpp
+    pre-phase-sequent-processor.cpp
+    pre-phase-parallel-processor.cpp
     broad-phase-quattro-detector.cpp
     broad-phase-sort-and-sweep-detector.cpp
     narrow-phase-sequent-processor.cpp

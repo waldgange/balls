@@ -10,12 +10,12 @@ namespace Balls {
 class QuattroDetector : public BroadPhaseManager
 {
 protected:
-    UniqueBallPtrPairs get_potential_collisions(const Frame& bf) const override;
+    UniqueBallPairs get_potential_collisions(const Frame& bf) const override;
 private:
     mutable struct CachePairs {
         std::mutex m;
         uint16_t frame_size;
-        UniqueBallPtrPairs pairs;
+        UniqueBallPairs pairs;
     } prev_result;
 };
 

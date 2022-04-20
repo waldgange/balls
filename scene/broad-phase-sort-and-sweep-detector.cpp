@@ -4,7 +4,7 @@
 
 namespace Balls {
 
-UniqueBallPtrPairs SortAndSweepDetector::get_potential_collisions(const Frame& bf) const {
+UniqueBallPairs SortAndSweepDetector::get_potential_collisions(const Frame& bf) const {
     // "Sort and Sweep" algorythm
     // Breaking O(n^2) complexity of checking all the pairs
     std::multimap<float, std::shared_ptr<Ball>> balls_x, balls_y;
@@ -13,8 +13,8 @@ UniqueBallPtrPairs SortAndSweepDetector::get_potential_collisions(const Frame& b
         balls_y.emplace(b->y() - b->r(), b);
     }
 
-    auto filter_pairs = [&] (std::multimap<float, std::shared_ptr<Ball>>& balls_on_axle) -> UniqueBallPtrPairs {
-        UniqueBallPtrPairs r;
+    auto filter_pairs = [&] (std::multimap<float, std::shared_ptr<Ball>>& balls_on_axle) -> UniqueBallPairs {
+        UniqueBallPairs r;
 
         auto l_it = balls_on_axle.begin();
         auto r_it = l_it;
@@ -39,9 +39,9 @@ UniqueBallPtrPairs SortAndSweepDetector::get_potential_collisions(const Frame& b
         return r;
     };
 
-    UniqueBallPtrPairs result;
-    const UniqueBallPtrPairs bx = filter_pairs(balls_x);
-    const UniqueBallPtrPairs by = filter_pairs(balls_y);
+    UniqueBallPairs result;
+    const UniqueBallPairs bx = filter_pairs(balls_x);
+    const UniqueBallPairs by = filter_pairs(balls_y);
     for (const auto& b : bx) {
         if (by.find(b) != by.end()) {
             result.emplace(b);

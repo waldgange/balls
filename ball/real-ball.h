@@ -4,6 +4,7 @@
 #include "ball.h"
 
 #include <QVector2D>
+#include <shared_mutex>
 
 namespace Balls {
 
@@ -24,7 +25,7 @@ public:
 protected:
     void process_border(const uint16_t width, const uint16_t height);
 
-    mutable std::mutex m;
+    mutable std::shared_mutex m;
      QVector2D v;
      uint32_t _id = 0;
      float _x = 0.0f;

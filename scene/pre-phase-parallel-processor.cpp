@@ -1,16 +1,16 @@
-#include "narrow-phase-parallel-processor.h"
-#include <optional>
+#include "pre-phase-parallel-processor.h"
+
 #include <iostream>
-#include <chrono>
+
 
 namespace Balls {
 
 
-NarrowPhaseParallelProcessor::~NarrowPhaseParallelProcessor() {
+PrePhaseParallelProcessor::~PrePhaseParallelProcessor() {
     stop();
 }
 
-void NarrowPhaseParallelProcessor::start() {
+void PrePhaseParallelProcessor::start() {
     unsigned int threads_count = std::thread::hardware_concurrency() - 1;  // one core for scene thread
     ball_workers.reserve(threads_count);
     auto self = shared_from_this();
@@ -21,7 +21,7 @@ void NarrowPhaseParallelProcessor::start() {
     }
 }
 
-void NarrowPhaseParallelProcessor::stop() {
+void PrePhaseParallelProcessor::stop() {
     auto self = shared_from_this();
     {
         std::unique_lock<std::mutex> guard(tasks_mutex);
@@ -40,31 +40,30 @@ void NarrowPhaseParallelProcessor::stop() {
     ball_workers.clear();
 }
 
-void NarrowPhaseParallelProcessor::process_potential_collisions(UniqueBallPairs potential_collisions) {
-    using namespace std::chrono_literals;
+void PrePhaseParallelProcessor::process_balls(Frame &f,
+                                              const float dt_,
+                                              const uint16_t width_,
+                                              const uint16_t height_) {
+    dt = dt_;
+    width = width_;
+    height = height_;
 
-    tasks_left = potential_collisions.size();
-    std::swap(tasks, potential_collisions);
+    tasks_left = f.size();
+    tasks = std::ref(f);
     task_it = tasks.begin();
     tasks_cv.notify_all();
-
-    auto t1 = std::chrono::high_resolution_clock::now();
 
     auto self = shared_from_this();
     std::unique_lock<std::mutex> guard(tasks_counter_mutex);
     tasks_counter_cv.wait(guard, [self] () {
         return self->tasks_left == 0;
     });
-    auto t2 = std::chrono::high_resolution_clock::now();
-    std::cout << std::chrono::duration<double>(t2 - t1).count() << " sec process tasks\n";
-    std::swap(colliding_pairs, new_colliding_pairs);
-    new_colliding_pairs.clear();
 }
 
-void NarrowPhaseParallelProcessor::work() {
+void PrePhaseParallelProcessor::work() {
     auto self = shared_from_this();
     while (true) {
-        std::optional<BallPair> bp;
+        std::shared_ptr<Ball> bp;
         {
             std::unique_lock<std::mutex> guard(tasks_mutex);
             tasks_cv.wait(guard, [self] () {
@@ -78,9 +77,8 @@ void NarrowPhaseParallelProcessor::work() {
             ++task_it;
         }
         if (bp) {
-            const BallPair& bpv = bp.value();
             try {
-                process_task(bpv);
+                bp->process(dt, width, height);
             } catch (const std::exception& e) {
                 std::cout << "Narrow phase worker failed: " << e.what();
             }
@@ -92,24 +90,6 @@ void NarrowPhaseParallelProcessor::work() {
             if (last) {
                 tasks_counter_cv.notify_one();
             }
-        }
-    }
-}
-
-void NarrowPhaseParallelProcessor::process_task(const BallPair& bp) {
-    const std::shared_ptr<Ball>& bb1 = bp.first;
-    const std::shared_ptr<Ball>& bb2 = bp.second;
-
-    bool is_colliding = bb1->collides(bb2);
-    if (is_colliding) {
-        bool was_colliding = false;
-        {
-            std::lock_guard<std::mutex> guard(colliding_mutex);
-            was_colliding = colliding_pairs.find(bp) != colliding_pairs.end();
-            new_colliding_pairs.insert(bp);
-        }
-        if (!was_colliding) {
-            bb1->process_collision(bb2);
         }
     }
 }

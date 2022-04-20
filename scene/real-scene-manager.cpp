@@ -1,20 +1,20 @@
 #include "real-scene-manager.h"
 
-#include <map>
-
 namespace Balls {
 
 
-RealSceneManager::RealSceneManager(const std::shared_ptr<BroadPhaseManager>& _bpm,
+RealSceneManager::RealSceneManager(const std::shared_ptr<PrePhaseManager>& _ppm,
+                                   const std::shared_ptr<BroadPhaseManager>& _bpm,
                                    const std::shared_ptr<NarrowPhaseManager>& _npm)
-    : SceneManager(_bpm, _npm) {}
+    : SceneManager(_ppm, _bpm, _npm) {}
 
 void RealSceneManager::start() {
+    ppm->start();
     npm->start();
 }
 
 void RealSceneManager::set_size(const uint16_t w, const uint16_t h) {
-    std::lock_guard<std::mutex> guard1(scene_mutex);
+    std::lock_guard<std::mutex> guard(scene_mutex);
     width = w;
     height = h;
 }
@@ -25,7 +25,7 @@ void RealSceneManager::add_ball(std::shared_ptr<Ball> b) {
 }
 
 void RealSceneManager::remove_balls() {
-    std::lock_guard<std::mutex> guard1(scene_mutex);
+    std::lock_guard<std::mutex> guard(scene_mutex);
     frame.clear();
 }
 
@@ -38,11 +38,9 @@ Frame RealSceneManager::get_next_frame() {
 }
 
 void RealSceneManager::process_scene(const float dt) {
-    for (auto& b : frame) {
-        b->process(dt, width, height);
-    }
-    UniqueBallPtrPairs ball_pairs = bpm->get_potential_collisions(frame);
-    npm->process_potential_collisions(ball_pairs);
+    ppm->process_balls(frame, dt, width, height);
+    UniqueBallPairs ball_pairs = bpm->get_potential_collisions(frame);
+    npm->process_potential_collisions(std::move(ball_pairs));
 }
 
 }

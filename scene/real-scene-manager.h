@@ -3,8 +3,7 @@
 
 #include "scene-manager.h"
 
-#include <condition_variable>
-#include <thread>
+#include <mutex>
 
 
 namespace Balls {
@@ -13,7 +12,8 @@ class RealSceneManager : public SceneManager, public std::enable_shared_from_thi
 {
 
 public:
-    RealSceneManager(const std::shared_ptr<BroadPhaseManager>&  _bpm,
+    RealSceneManager(const std::shared_ptr<PrePhaseManager>&    _ppm,
+                     const std::shared_ptr<BroadPhaseManager>&  _bpm,
                      const std::shared_ptr<NarrowPhaseManager>& _npm);
 
     void start() override;

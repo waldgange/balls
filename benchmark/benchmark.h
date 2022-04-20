@@ -6,6 +6,7 @@
 namespace Benchmark {
 
 struct BenchmarkArguments {
+    const Balls::PrePhaseType pre;
     const Balls::BroadPhaseType broad;
     const Balls::NarrowPhaseType narrow;
     const int balls;

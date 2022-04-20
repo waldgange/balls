@@ -10,15 +10,12 @@
 #include <mutex>
 #include <queue>
 #include <thread>
-#include <unordered_set>
-#include <utility>
-#include <vector>
 
 
 namespace Balls {
 
 const uint8_t MAX_FPS = 60;
-const uint8_t MAX_FRAMES_QUEUE = 10;
+const uint8_t MAX_FRAMES_QUEUE = 100;
 
 
 class BallsWidget : public QWidget, public QEnableSharedFromThis<BallsWidget>

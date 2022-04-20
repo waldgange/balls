@@ -8,13 +8,13 @@ namespace Balls {
 class NarrowPhaseSequentProcessor : public NarrowPhaseManager
 {
 public:
-    void process_potential_collisions(UniqueBallPtrPairs pairs) override;
+    void process_potential_collisions(UniqueBallPairs pairs) override;
 
 protected:
-    UniqueBallPtrPairs colliding_pairs;
+    UniqueBallPairs colliding_pairs;
 
-    void filter_potential_collisions(UniqueBallPtrPairs& ubp) const;
-    void process_collisions(UniqueBallPtrPairs& ubp);
+    void filter_potential_collisions(UniqueBallPairs& ubp) const;
+    void process_collisions(UniqueBallPairs& ubp);
 };
 
 }

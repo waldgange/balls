@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <ctime>
+#include <mutex>
 
 namespace Balls {
 
@@ -27,6 +28,8 @@ RealBall::RealBall(uint64_t id, float x, float y)
 void RealBall::process(const float dt,
                        const uint16_t width,
                        const uint16_t height) {
+    std::unique_lock lock(m);
+
     _x += v.x() * dt;
     _y += v.y() * dt;
 
@@ -64,7 +67,9 @@ bool RealBall::collides(const std::shared_ptr<Ball>& o) const {
     if (!other) {
         throw std::runtime_error("Invvalid argument type");
     }
-    std::scoped_lock(m, other->m);
+    std::shared_lock lock1(m, std::defer_lock);
+    std::shared_lock lock2(other->m, std::defer_lock);
+    std::lock(lock1, lock2);
     return QVector2D(_x - other->x(), _y - other->y()).length() < _r + other->r();
 }
 
@@ -73,6 +78,10 @@ void RealBall::process_collision(const std::shared_ptr<Ball>& o) {
     if (!other) {
         return;
     }
+
+    std::unique_lock lock1(m, std::defer_lock);
+    std::unique_lock lock2(other->m, std::defer_lock);
+    std::lock(lock1, lock2);
 
     QVector2D parallel(_x - other->_x, _y - other->_y);
     float path = parallel.length();

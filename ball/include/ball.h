@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <memory>
-#include <mutex>
 
 
 namespace Balls {
