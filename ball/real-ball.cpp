@@ -7,22 +7,19 @@
 namespace Balls {
 
 
-RealBall::RealBall(uint64_t id, float x, float y)
+RealBall::RealBall(uint64_t id,
+                   float x,
+                   float y,
+                   float r,
+                   float dx,
+                   float dy)
     : _id(id)
     , _x(x)
-    , _y(y) {
-    std::srand(std::time(nullptr));
-    uint32_t rv = std::rand();
-    static uint16_t angle = 10;
-    angle += 100;
-    if (angle >= 360) {
-        angle = angle % 360;
-    }
-    _r = MIN_BALL_RADIUS + rv % (MAX_BALL_RADIUS - MIN_BALL_RADIUS + 1);
-    _mass = 3.14159 * _r * _r;
-    float speed = 5 + (rv >> 1) % (MAX_BALL_SPEED - 5);
-    v.setX(cos(3.14159 * angle / 180) * speed);
-    v.setY(sin(3.14159 * angle / 180) * speed);
+    , _y(y)
+    , _r(r)
+    , _mass(3.14159 * r * r) {
+    v.setX(dx);
+    v.setY(dy);
 }
 
 void RealBall::process(const float dt,
@@ -64,7 +61,7 @@ void RealBall::process_border(const uint16_t width,
 
 bool RealBall::collides(const std::shared_ptr<Ball>& o) const {
     RealBall* other = dynamic_cast<RealBall*>(o.get());
-    if (!other) {
+    if (!other || other == this) {
         throw std::runtime_error("Invvalid argument type");
     }
     std::shared_lock lock1(m, std::defer_lock);
@@ -75,8 +72,8 @@ bool RealBall::collides(const std::shared_ptr<Ball>& o) const {
 
 void RealBall::process_collision(const std::shared_ptr<Ball>& o) {
     RealBall* other = dynamic_cast<RealBall*>(o.get());
-    if (!other) {
-        return;
+    if (!other || other == this) {
+        throw std::runtime_error("Invvalid argument type");
     }
 
     std::unique_lock lock1(m, std::defer_lock);

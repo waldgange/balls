@@ -32,7 +32,16 @@ enum class BallType {
     REAL_BALL
 };
 
-std::shared_ptr<Ball> make_ball(const BallType bt, const float x, const float y);
+std::shared_ptr<Ball> make_ball(BallType bt,
+                                float x,
+                                float y,
+                                float r,
+                                float dx,
+                                float dy);
+
+std::shared_ptr<Ball> make_ball(BallType bt,
+                                float x,
+                                float y);
 
 }
 

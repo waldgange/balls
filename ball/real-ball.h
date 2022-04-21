@@ -11,7 +11,12 @@ namespace Balls {
 class RealBall : public Ball
 {
 public:
-    RealBall(uint64_t id, float x, float y);
+    RealBall(uint64_t id,
+             float x,
+             float y,
+             float r,
+             float dx,
+             float dy);
 
     void process(const float dt, const uint16_t width, const uint16_t height) override;
     bool collides(const std::shared_ptr<Ball>& other) const override;
@@ -27,11 +32,11 @@ protected:
 
     mutable std::shared_mutex m;
      QVector2D v;
-     uint32_t _id = 0;
-     float _x = 0.0f;
-     float _y = 0.0f;
-     float _r = 0.0f;
-     float _mass = 0.0f;
+     uint32_t _id;
+     float _x;
+     float _y;
+     float _r;
+     float _mass;
 };
 
 }
