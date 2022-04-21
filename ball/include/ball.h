@@ -1,7 +1,6 @@
 #ifndef BALL_H
 #define BALL_H
 
-#include <stdint.h>
 #include <memory>
 
 
@@ -16,7 +15,7 @@ const uint32_t MAX_BALL_COUNT = 100000;
 
 class Ball {
 public:
-    virtual ~Ball() = 0;
+    virtual ~Ball() {};
 
     virtual void process(const float dt, const uint16_t width, const uint16_t height) = 0;
     virtual void process_collision(const std::shared_ptr<Ball>& other) = 0;

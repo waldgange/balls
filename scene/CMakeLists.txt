@@ -1,5 +1,7 @@
 find_package(Qt5 COMPONENTS Core REQUIRED)
 
+add_subdirectory(tests)
+
 add_library(scene SHARED
     scene-manager.cpp
     real-scene-manager.cpp

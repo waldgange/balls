@@ -6,10 +6,6 @@
 namespace Balls {
 
 
-NarrowPhaseParallelProcessor::~NarrowPhaseParallelProcessor() {
-    stop();
-}
-
 void NarrowPhaseParallelProcessor::start() {
     unsigned int threads_count = std::thread::hardware_concurrency() - 1;  // one core for scene thread
     ball_workers.reserve(threads_count);
@@ -29,9 +25,6 @@ void NarrowPhaseParallelProcessor::stop() {
             return;
         }
         shutdown = true;
-        tasks_cv.wait(guard, [self] () {
-            return self->tasks.empty();
-        });
     }
     tasks_cv.notify_all();
     for (auto& w : ball_workers) {
@@ -59,6 +52,7 @@ void NarrowPhaseParallelProcessor::process_potential_collisions(UniqueBallPairs 
     std::cout << std::chrono::duration<double>(t2 - t1).count() << " sec process tasks\n";
     std::swap(colliding_pairs, new_colliding_pairs);
     new_colliding_pairs.clear();
+    tasks = UniqueBallPairs();
 }
 
 void NarrowPhaseParallelProcessor::work() {

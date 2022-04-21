@@ -7,7 +7,7 @@ target_link_libraries(ball-test
   ball)
 
 include(GoogleTest)
-gtest_discover_tests(ball-test)
+gtest_discover_tests(ball-test PROPERTIES TIMEOUT 10)
 
 add_custom_target(run-ball-test ALL
                   COMMENT "Run ball tests"

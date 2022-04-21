@@ -6,10 +6,6 @@
 namespace Balls {
 
 
-PrePhaseParallelProcessor::~PrePhaseParallelProcessor() {
-    stop();
-}
-
 void PrePhaseParallelProcessor::start() {
     unsigned int threads_count = std::thread::hardware_concurrency() - 1;  // one core for scene thread
     ball_workers.reserve(threads_count);
@@ -29,9 +25,6 @@ void PrePhaseParallelProcessor::stop() {
             return;
         }
         shutdown = true;
-        tasks_cv.wait(guard, [self] () {
-            return self->tasks.empty();
-        });
     }
     tasks_cv.notify_all();
     for (auto& w : ball_workers) {

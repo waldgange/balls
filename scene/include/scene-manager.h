@@ -26,6 +26,7 @@ public:
     virtual ~PrePhaseManager() {};
 
     virtual void start() {};
+    virtual void stop() {};
     virtual void process_balls(Frame& bf,
                                const float dt,
                                const uint16_t width,
@@ -44,6 +45,7 @@ public:
     virtual ~NarrowPhaseManager() {};
 
     virtual void start() {};
+    virtual void stop() {};
     virtual void process_potential_collisions(UniqueBallPairs potential_collisions) = 0;
 };
 
@@ -85,6 +87,13 @@ enum class NarrowPhaseType {
 std::shared_ptr<SceneManager> make_scene_manager(PrePhaseType pt,
                                                  BroadPhaseType bt,
                                                  NarrowPhaseType nt);
+
+std::shared_ptr<PrePhaseManager> make_pre_manager(PrePhaseType pt);
+
+std::shared_ptr<BroadPhaseManager> make_broad_manager(BroadPhaseType bt);
+
+std::shared_ptr<NarrowPhaseManager> make_narrow_manager(NarrowPhaseType nt);
+
 
 }
 

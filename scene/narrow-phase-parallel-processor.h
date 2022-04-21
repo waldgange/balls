@@ -14,12 +14,10 @@ namespace Balls {
 
 class NarrowPhaseParallelProcessor : public NarrowPhaseManager, public std::enable_shared_from_this<NarrowPhaseParallelProcessor>
 {
-
 public:
-    ~NarrowPhaseParallelProcessor();
-
     void start() override;
-    virtual void process_potential_collisions(UniqueBallPairs potential_collisions) override;
+    void stop() override;
+    void process_potential_collisions(UniqueBallPairs potential_collisions) override;
 
 protected:
     std::mutex colliding_mutex;
@@ -38,7 +36,6 @@ protected:
 
     void process_task(const BallPair& bp);
     void work();
-    void stop();
 };
 
 }

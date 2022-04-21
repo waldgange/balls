@@ -15,8 +15,8 @@ namespace Balls {
 class PrePhaseParallelProcessor : public PrePhaseManager, public std::enable_shared_from_this<PrePhaseParallelProcessor>
 {
 public:
-    ~PrePhaseParallelProcessor();
     void start() override;
+    void stop() override;
     void process_balls(Frame& f,
                        const float dt,
                        const uint16_t width,
@@ -37,7 +37,6 @@ private:
      uint16_t height;
 
     void work();
-    void stop();
 };
 
 

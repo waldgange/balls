@@ -4,7 +4,6 @@
 
 namespace Balls {
 
-Ball::~Ball() {}
 
 std::shared_ptr<Ball> make_ball(BallType bt,
                                 float x,
@@ -36,5 +35,6 @@ std::shared_ptr<Ball> make_ball(BallType bt, float x, float y)
 
     return make_ball(bt, x, y, r, dx, dy);
 }
+
 
 }

@@ -8,6 +8,11 @@ RealSceneManager::RealSceneManager(const std::shared_ptr<PrePhaseManager>& _ppm,
                                    const std::shared_ptr<NarrowPhaseManager>& _npm)
     : SceneManager(_ppm, _bpm, _npm) {}
 
+RealSceneManager::~RealSceneManager() {
+    ppm->stop();
+    npm->stop();
+}
+
 void RealSceneManager::start() {
     ppm->start();
     npm->start();

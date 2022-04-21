@@ -15,28 +15,43 @@ namespace Balls {
 std::shared_ptr<SceneManager> make_scene_manager(PrePhaseType pt,
                                                  BroadPhaseType bt,
                                                  NarrowPhaseType nt) {
+    auto ppm = make_pre_manager(pt);
+    auto bpm = make_broad_manager(bt);
+    auto npm = make_narrow_manager(nt);
+    if (!ppm || !bpm || !npm) {
+        return nullptr;
+    }
+    return std::make_shared<RealSceneManager>(std::move(ppm), std::move(bpm), std::move(npm));
+}
+
+std::shared_ptr<PrePhaseManager> make_pre_manager(PrePhaseType pt) {
     std::shared_ptr<PrePhaseManager> ppm;
-    std::shared_ptr<BroadPhaseManager> bpm;
-    std::shared_ptr<NarrowPhaseManager> npm;
     if (pt == PrePhaseType::SEQUENT) {
         ppm = std::make_shared<PrePhaseSequentProcessor>();
     } else if (pt == PrePhaseType::PARALLEL) {
         ppm = std::make_shared<PrePhaseParallelProcessor>();
     }
+    return ppm;
+}
+
+std::shared_ptr<BroadPhaseManager> make_broad_manager(BroadPhaseType bt) {
+    std::shared_ptr<BroadPhaseManager> bpm;
     if (bt == BroadPhaseType::QWATTRO) {
         bpm = std::make_shared<QuattroDetector>();
     } else if (bt == BroadPhaseType::SORT_AND_SWEEP) {
         bpm = std::make_shared<SortAndSweepDetector>();
     }
+    return bpm;
+}
+
+std::shared_ptr<NarrowPhaseManager> make_narrow_manager(NarrowPhaseType nt) {
+    std::shared_ptr<NarrowPhaseManager> npm;
     if (nt == NarrowPhaseType::SEQUENT) {
         npm = std::make_shared<NarrowPhaseSequentProcessor>();
     } else if (nt == NarrowPhaseType::PARALLEL) {
         npm = std::make_shared<NarrowPhaseParallelProcessor>();
     }
-    if (!ppm || !bpm || !npm) {
-        return nullptr;
-    }
-    return std::make_shared<RealSceneManager>(std::move(ppm), std::move(bpm), std::move(npm));
+    return npm;
 }
 
 SceneManager::SceneManager(const std::shared_ptr<PrePhaseManager>&    _ppm,
