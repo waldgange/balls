@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
     try {
         ba.emplace(Benchmark::parse_command_line_arguments(argc, argv));
     } catch (const std::exception& e) {
-        std::cout << e.what();
+        std::cout << e.what() << std::endl;
     }
     if (!ba) {
         return 1;

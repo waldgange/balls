@@ -81,7 +81,6 @@ double BenchmarkManager::run() {
 
     for (int i = 0; i < ba.frames; ++i) {
         sm->get_next_frame();
-        std::cout << i << std::endl;
     }
 
     auto t_end = std::chrono::high_resolution_clock::now();
