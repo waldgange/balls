@@ -1,10 +1,10 @@
 # balls
 Balls is a project for simulation of 2D balls collisions. There are two applications in this project:
 * **ballsapp**
+![](/static/balls-screen.png?raw=true)
 
 It is a gui application, that demonstrates collisions of balls. You can add balls and switch algorithms, used to process scene.
 * **benchmark**
-![](/static/balls-screen.png?raw=true)
 
 It is a CLI application, that measures time of processing specified number of frames with specified algorithms.
 
