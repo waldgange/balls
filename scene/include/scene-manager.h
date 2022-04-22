@@ -37,6 +37,8 @@ class BroadPhaseManager {
 public:
     virtual ~BroadPhaseManager() {};
 
+    virtual void start() {};
+    virtual void stop() {};
     virtual UniqueBallPairs get_potential_collisions(const Frame& bf) const = 0;
 };
 
@@ -55,9 +57,13 @@ public:
     SceneManager(const std::shared_ptr<PrePhaseManager>&    _ppm,
                  const std::shared_ptr<BroadPhaseManager>&  _bpm,
                  const std::shared_ptr<NarrowPhaseManager>& _npm);
-    virtual ~SceneManager() {};
+    virtual ~SceneManager();
 
-    virtual void start() = 0;
+    void start();
+    void set_pre_phase_manager(std::shared_ptr<PrePhaseManager> _ppm);
+    void set_broad_phase_manager(std::shared_ptr<BroadPhaseManager> _bpm);
+    void set_narrow_phase_manager(std::shared_ptr<NarrowPhaseManager> _npm);
+
     virtual void set_size(const uint16_t w, const uint16_t h) = 0;
     virtual void add_ball(std::shared_ptr<Ball> b) = 0;
     virtual void remove_balls() = 0;

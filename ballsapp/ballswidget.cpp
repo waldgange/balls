@@ -4,14 +4,13 @@
 #include <QTimer>
 #include <QTime>
 
-
 namespace Balls {
 
 BallsWidget::BallsWidget(QWidget *parent)
     : QWidget(parent)
     , shutdown(true) {
-    sm = make_scene_manager(PrePhaseType::PARALLEL,
-                            BroadPhaseType::SORT_AND_SWEEP,
+    sm = make_scene_manager(PrePhaseType::SEQUENT,
+                            BroadPhaseType::QWATTRO,
                             NarrowPhaseType::SEQUENT);
     assert(sm);
     sm->start();
@@ -22,7 +21,7 @@ BallsWidget::BallsWidget(QWidget *parent)
 }
 
 BallsWidget::~BallsWidget() {
-    clear_scene();
+    stop();
 }
 
 void BallsWidget::paintEvent(QPaintEvent* ) {
@@ -53,6 +52,9 @@ void BallsWidget::start() {
 void BallsWidget::stop() {
     {
         std::unique_lock<std::mutex> guard(scene_mutex);
+        if (shutdown) {
+            return;
+        }
         shutdown = true;
     }
     fcv.notify_one();
@@ -156,6 +158,33 @@ void BallsWidget::remove_balls() {
     stop();
     clear_scene();
     sm->remove_balls();
+}
+
+void BallsWidget::set_pre(int n) {
+    auto ppm = make_pre_manager(static_cast<PrePhaseType>(n));
+    if (ppm) {
+        stop();
+        sm->set_pre_phase_manager(std::move(ppm));
+        start();
+    }
+}
+
+void BallsWidget::set_broad(int n) {
+    auto bpm = make_broad_manager(static_cast<BroadPhaseType>(n));
+    if (bpm) {
+        stop();
+        sm->set_broad_phase_manager(std::move(bpm));
+        start();
+    }
+}
+
+void BallsWidget::set_narrow(int n) {
+    auto npm = make_narrow_manager(static_cast<NarrowPhaseType>(n));
+    if (npm) {
+        stop();
+        sm->set_narrow_phase_manager(std::move(npm));
+        start();
+    }
 }
 
 

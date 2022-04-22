@@ -61,5 +61,35 @@ SceneManager::SceneManager(const std::shared_ptr<PrePhaseManager>&    _ppm,
     , bpm(_bpm)
     , npm(_npm) { }
 
+SceneManager::~SceneManager() {
+    ppm->stop();
+    bpm->stop();
+    npm->stop();
+}
+
+void SceneManager::start() {
+    ppm->start();
+    bpm->start();
+    npm->start();
+}
+
+void SceneManager::set_pre_phase_manager(std::shared_ptr<PrePhaseManager> _ppm) {
+    ppm->stop();
+    std::swap(ppm, _ppm);
+    ppm->start();
+}
+
+void SceneManager::set_broad_phase_manager(std::shared_ptr<BroadPhaseManager> _bpm) {
+    bpm->stop();
+    std::swap(bpm, _bpm);
+    bpm->start();
+}
+
+void SceneManager::set_narrow_phase_manager(std::shared_ptr<NarrowPhaseManager> _npm) {
+    npm->stop();
+    std::swap(npm, _npm);
+    npm->start();
+}
+
 
 }

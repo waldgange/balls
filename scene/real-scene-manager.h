@@ -15,9 +15,7 @@ public:
     RealSceneManager(const std::shared_ptr<PrePhaseManager>&    _ppm,
                      const std::shared_ptr<BroadPhaseManager>&  _bpm,
                      const std::shared_ptr<NarrowPhaseManager>& _npm);
-    ~RealSceneManager();
 
-    void start() override;
     void set_size(const uint16_t w, const uint16_t h) override;
     void add_ball(std::shared_ptr<Ball> b) override;
     void remove_balls() override;

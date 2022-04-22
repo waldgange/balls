@@ -1,7 +1,5 @@
 #include "pre-phase-parallel-processor.h"
 
-#include <iostream>
-
 
 namespace Balls {
 
@@ -70,11 +68,7 @@ void PrePhaseParallelProcessor::work() {
             ++task_it;
         }
         if (bp) {
-            try {
-                bp->process(dt, width, height);
-            } catch (const std::exception& e) {
-                std::cout << "Narrow phase worker failed: " << e.what();
-            }
+            bp->process(dt, width, height);
             bool last = false;
             {
                 std::lock_guard<std::mutex> guard(tasks_counter_mutex);

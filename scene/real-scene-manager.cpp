@@ -8,16 +8,6 @@ RealSceneManager::RealSceneManager(const std::shared_ptr<PrePhaseManager>& _ppm,
                                    const std::shared_ptr<NarrowPhaseManager>& _npm)
     : SceneManager(_ppm, _bpm, _npm) {}
 
-RealSceneManager::~RealSceneManager() {
-    ppm->stop();
-    npm->stop();
-}
-
-void RealSceneManager::start() {
-    ppm->start();
-    npm->start();
-}
-
 void RealSceneManager::set_size(const uint16_t w, const uint16_t h) {
     std::lock_guard<std::mutex> guard(scene_mutex);
     width = w;

@@ -51,6 +51,9 @@ public slots:
     void render_later();
     void add_ball();
     void remove_balls();
+    void set_pre(int n);
+    void set_broad(int n);
+    void set_narrow(int n);
 
 signals:
 

@@ -1,6 +1,5 @@
 #include "narrow-phase-parallel-processor.h"
 #include <optional>
-#include <iostream>
 #include <chrono>
 
 namespace Balls {
@@ -49,7 +48,6 @@ void NarrowPhaseParallelProcessor::process_potential_collisions(UniqueBallPairs 
         return self->tasks_left == 0;
     });
     auto t2 = std::chrono::high_resolution_clock::now();
-    std::cout << std::chrono::duration<double>(t2 - t1).count() << " sec process tasks\n";
     std::swap(colliding_pairs, new_colliding_pairs);
     new_colliding_pairs.clear();
     tasks = UniqueBallPairs();
@@ -73,11 +71,7 @@ void NarrowPhaseParallelProcessor::work() {
         }
         if (bp) {
             const BallPair& bpv = bp.value();
-            try {
-                process_task(bpv);
-            } catch (const std::exception& e) {
-                std::cout << "Narrow phase worker failed: " << e.what();
-            }
+            process_task(bpv);
             bool last = false;
             {
                 std::lock_guard<std::mutex> guard(tasks_counter_mutex);
